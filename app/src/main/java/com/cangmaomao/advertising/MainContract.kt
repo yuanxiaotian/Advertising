@@ -13,9 +13,11 @@ interface MainContract {
 
         fun fail(msg: String)
 
-        fun carId(id: String)
+        fun carId(id: String, info: ArrayList<FleetInfo>)
 
         fun carInfo(carLocation: CarLocation)
+
+        fun fleet(info: ArrayList<FleetInfo>)
 
     }
 
@@ -26,6 +28,8 @@ interface MainContract {
         fun getOrgTreeAjax(tag: String)
 
         fun carLocation(tag: String, map: Map<String, String>)
+
+        fun carInfo(info: ArrayList<FleetInfo>, carLocation: CarLocation)
     }
 
 }

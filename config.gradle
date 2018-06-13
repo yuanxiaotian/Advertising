@@ -59,6 +59,7 @@ ext {
             greendao_generator     : "org.greenrobot:greendao-generator:$rootProject.greendao_generator",
             banner                 : "com.youth.banner:banner:$rootProject.banner",
             fresco                 : "com.facebook.fresco:fresco:$rootProject.fresco",
+            cardview                : "com.android.support:cardview-v7:$rootProject.supportLibraryVersion",
             commonLib              : ":Library"
     ]
 }

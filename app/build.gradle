@@ -66,6 +66,7 @@ dependencies {
     compile 'cn.jzvd:jiaozivideoplayer:6.2.10'
     implementation files('libs/AMap3DMap_6.2.0_AMapSearch_6.1.0_20180427.jar')
     implementation project(rootProject.ext.dependencies.commonLib)
+    compile 'com.aliyun.ams:alicloud-android-hotfix:3.2.3'
 }
 repositories {
     mavenCentral()

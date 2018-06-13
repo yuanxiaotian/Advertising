@@ -1,5 +1,6 @@
 package com.cangmaomao.advertising
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
 import android.content.SharedPreferences
@@ -8,25 +9,27 @@ import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.AppCompatEditText
+import android.support.v7.widget.AppCompatTextView
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import cn.jzvd.JZVideoPlayer
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import cn.jzvd.*
 import com.amap.api.maps.AMap
 import com.amap.api.maps.CameraUpdateFactory
-import com.amap.api.maps.model.BitmapDescriptorFactory
-import com.amap.api.maps.model.LatLng
-import com.amap.api.maps.model.LatLngBounds
-import com.amap.api.maps.model.MarkerOptions
+import com.amap.api.maps.model.*
 import com.cangmaomao.advertising.app.App
 import com.cangmaomao.lib.utils.GlideImageLoader
 import com.cangmaomao.lib.utils.e
+import com.cangmaomao.lib.utils.longToast
 import com.cangmaomao.lib.utils.shortToast
 import com.youth.banner.BannerConfig
 import com.youth.banner.Transformer
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity(), MainContract.MainView {
@@ -62,6 +65,8 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
 
     var isFlag = false
 
+    var lastTime = "0"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val app = application as App
@@ -71,16 +76,15 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
             setSupportActionBar(toolbar);
             bmapView.onCreate(savedInstanceState)
             aMap = bmapView.map
-            aMap.uiSettings.setZoomInByScreenCenter(true)
+            aMap.isMyLocationEnabled = false
             aMap.uiSettings.setLogoBottomMargin(-100)
+            aMap.uiSettings.isZoomControlsEnabled = false
             MainPresenter(this)
             timerTask1 = object : TimerTask() {
                 override fun run() {
                     presenter.login(TAG)
                 }
             }
-
-
             preferences = applicationContext.getSharedPreferences("LOGIN", Context.MODE_PRIVATE)
             userName = preferences.getString("accout", "")
             password = preferences.getString("pwd", "")
@@ -97,25 +101,29 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
                 dialog.setPositiveButton("登录", DialogInterface.OnClickListener { dialogInterface: DialogInterface, v: Int ->
                     userName = accountId.text.toString()
                     password = pwdId.text.toString()
-                    val edit = preferences.edit()
-                    edit.putString("accout", userName)
-                    edit.putString("pwd", password)
-                    edit.apply()
                     timer1.schedule(timerTask1, 0, 7200 * 1000)
                 })
                 dialog.show()
             } else {
                 timer1.schedule(timerTask1, 0, 7200 * 1000)
             }
+
+            cardView.radius = 10f
+            cardView.cardElevation = 10f
+
+
+            cardView1.radius = 10f
+            cardView1.cardElevation = 10f
+
             val window = this.windowManager
             val width = window.defaultDisplay.width
-            val params = webView2.layoutParams
+            val params = cardView.layoutParams
             params.height = width / 2
-            webView2.layoutParams = params
+            cardView.layoutParams = params
 
-            val params1 = webView3.layoutParams
+            val params1 = cardView1.layoutParams
             params.height = width / 2
-            webView3.layoutParams = params1
+            cardView1.layoutParams = params1
 
             if (!TextUtils.isEmpty(url)) {
                 initBannerAndVideo()
@@ -124,11 +132,11 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
 
         } else {
             setContentView(R.layout.activity_main_h)
-
             bmapView.onCreate(savedInstanceState)
             aMap = bmapView.map
-            aMap.uiSettings.setZoomInByScreenCenter(true)
+            aMap.isMyLocationEnabled = false
             aMap.uiSettings.setLogoBottomMargin(-100)
+            aMap.uiSettings.isZoomControlsEnabled = false
             MainPresenter(this)
             timerTask1 = object : TimerTask() {
                 override fun run() {
@@ -172,37 +180,121 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
         shortToast(this, "登录异常!")
     }
 
-    override fun carId(id: String) {
+    lateinit var info: ArrayList<FleetInfo>
+    override fun carId(id: String, info: ArrayList<FleetInfo>) {
         if (!isFlag) {
             timerTask = object : TimerTask() {
                 override fun run() {
                     isFlag = true
                     presenter.carLocation(TAG, mapOf("_action" to "queryChangedFromCache",
-                            "lastTime" to "0",
+                            "lastTime" to lastTime,
                             "queryList" to id))
                 }
             }
         }
-        timer.schedule(timerTask, 0, 30000);
+        timer.schedule(timerTask, 0, 1000 * 40);
+        this.info = info
     }
 
-
+    val builder = LatLngBounds.builder()
+    val absMarker = TreeMap<Int, Marker>()
+    @SuppressLint("SetTextI18n")
     override fun carInfo(carLocation: CarLocation) {
-        aMap.clear()
+        val edit = preferences.edit()
+        edit.putString("accout", userName)
+        edit.putString("pwd", password)
+        edit.apply()
+        var count = 0
+        var stop = 0
+        var pause = 0
         val carInfoList = carLocation.obj.data
-        val builder = LatLngBounds.builder()
+        val markers = aMap.mapScreenMarkers
         for (car in carInfoList) {
+            val latLng = LatLng(car.lat, car.lon)
             val icon = if (car.linkStatus == 0) R.drawable.hui else if (car.linkStatus == 1 && car.speed > 0) R.drawable.lv else R.drawable.van_icon
-            builder.include(LatLng(car.lat, car.lon))
-            val markerOption = MarkerOptions().position(LatLng(car.lat, car.lon))
-                    .icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(resources, icon)))
-            aMap.addMarker(markerOption).setRotateAngleNotUpdate(360 - car.direction.toFloat())
+            if (absMarker.size <= 0) {
+                val markerOption = MarkerOptions().position(latLng)
+                        .icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(resources, icon)))
+                val marker = aMap.addMarker(markerOption)
+                marker.rotateAngle = 360 - car.direction.toFloat()
+                marker.options.icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(resources, icon)))
+                absMarker[car.vehicleID] = marker
+                builder.include(latLng)
+            } else {
+                val m = absMarker[car.vehicleID]
+                if (m != null) {
+                    for (marker in markers) {
+                        if (m.id.equals(marker.id)) {
+                            val markerOption = MarkerOptions().position(latLng)
+                                    .icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(resources, icon)))
+                            val a = aMap.addMarker(markerOption)
+                            marker.remove()
+                            a.rotateAngle = 360 - car.direction.toFloat()
+                            absMarker[car.vehicleID] = a
+                            builder.include(latLng)
+                        }
+                    }
+                } else {
+                    val markerOption = MarkerOptions().position(latLng)
+                            .icon(BitmapDescriptorFactory.fromBitmap(BitmapFactory.decodeResource(resources, icon)))
+                    val marker = aMap.addMarker(markerOption)
+                    marker.rotateAngle = 360 - car.direction.toFloat()
+                    absMarker[car.vehicleID] = marker
+                    builder.include(latLng)
+                }
+            }
+
+            if (car.linkStatus == 0) {
+                stop++
+            }
+
+            if (car.linkStatus == 1 && car.speed > 0) {
+                count++
+            }
+
+            if (car.linkStatus == 1 && car.speed <= 0) {
+                pause++
+            }
         }
-        val u = CameraUpdateFactory.newLatLngBounds(builder.build(), 100)
-        aMap.animateCamera(u)
-        aMap.moveCamera(u)
+        e("${markers.size}b")
+        aMap.moveCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 80))
+        tv_title.text = "合计:${absMarker.size}"
+        tv_title1.text = "运行:${count}"
+        tv_title2.text = "停车:${pause}"
+        tv_title3.text = "离线:${stop}"
+        presenter.carInfo(info, carLocation)
 
+    }
 
+    override fun fleet(info: ArrayList<FleetInfo>) {
+        var k = 0
+        lateinit var view: View
+        lateinit var linearLayout: LinearLayout
+        for (i in info) {
+            if (k % 3 == 0) {
+                linearLayout = LinearLayout(this)
+                linearLayout.orientation = LinearLayout.VERTICAL
+                linearLayout.removeAllViews()
+            }
+            val itemView = layoutInflater.inflate(R.layout.activity_view_car_item, null)
+            itemView.findViewById<AppCompatTextView>(R.id.textView1).text = i.name
+            itemView.findViewById<AppCompatTextView>(R.id.textView2).text = "     ${i.onLine}"
+            itemView.findViewById<AppCompatTextView>(R.id.textView3).text = "     ${i.pause}"
+            itemView.findViewById<AppCompatTextView>(R.id.textView4).text = "     ${i.offLine}"
+            linearLayout.addView(itemView)
+            if ((info.size <= 2 && k % 3 == 1) || k % 3 == 2) {
+                linearLayout.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (if (info.size <= 3) itemView.layoutParams.height * info.size else itemView.layoutParams.height * 3))
+                viewFlipper.addView(linearLayout)
+            }
+            k++
+        }
+        val p = viewFlipper.layoutParams
+        p.height = linearLayout.layoutParams.height
+        viewFlipper.layoutParams = p
+
+        if (info.size < 3) {
+            viewFlipper.stopFlipping()
+        }
     }
 
 
@@ -220,6 +312,7 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
                 AlertDialog.Builder(this).setTitle("Url设置").setView(view).setPositiveButton("确定", DialogInterface.OnClickListener { dialogInterface: DialogInterface, v: Int ->
                     val u = mUrl.text.toString()
                     url = "http://${u}.com/"
+//                    url = "http://xuli008.0324.bftii.com/"
                     preferences.edit().putString("url", url).apply()
                     initBannerAndVideo()
                 }).show()
@@ -231,22 +324,29 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
 
     fun initBannerAndVideo() {
         val list: List<String> = listOf(
-                "${url}1.jpg",
-                "${url}2.jpg",
-                "${url}3.jpg",
-                "${url}4.jpg")
+                "${url}5.jpg",
+                "${url}5.jpg",
+                "${url}11.jpg",
+                "${url}12.jpg",
+                "${url}5.jpg"
+        )
         webView2.setImageLoader(GlideImageLoader())
         webView2.setBannerAnimation(Transformer.DepthPage);
-        webView2.setImages(list)
+        webView2.update(list)
         webView2.setDelayTime(5000)
         webView2.setIndicatorGravity(BannerConfig.NOT_INDICATOR)
         webView2.start()
 
-        webView3.setUp("${url}time.mp4", JZVideoPlayer.SCREEN_WINDOW_NORMAL, "旭利优卡")
+        webView3.setUp("${url}time.mp4", JZVideoPlayer.SCREEN_WINDOW_NORMAL, "旭利")
         webView3.startVideo()
         webView3.setProgressListener {
             if (it == 99) {
-                webView3.startVideo()
+                webView3.initTextureView()
+                webView3.addTextureView()
+                JZMediaManager.setDataSource(webView3.dataSourceObjects)
+                JZMediaManager.setCurrentDataSource(JZUtils.getCurrentFromDataSource(webView3.dataSourceObjects, webView3.currentUrlMapIndex))
+                webView3.onStatePreparing()
+                webView3.onEvent(JZUserAction.ON_CLICK_START_ERROR)
             }
         }
     }

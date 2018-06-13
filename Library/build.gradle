@@ -51,4 +51,5 @@ dependencies {
     api rootProject.ext.dependencies.greendao
     api rootProject.ext.dependencies.banner
     api rootProject.ext.dependencies.fresco
+    api rootProject.ext.dependencies.cardview
 }

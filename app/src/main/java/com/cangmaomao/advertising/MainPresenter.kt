@@ -13,6 +13,7 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import okhttp3.ResponseBody
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MainPresenter(val view: MainContract.MainView) : MainContract.MainPresenter {
 
@@ -54,13 +55,16 @@ class MainPresenter(val view: MainContract.MainView) : MainContract.MainPresente
                     override fun success(carInfo: CarInfo) {
                         if (TextUtils.isEmpty(carInfo.error)) {
                             val c = carInfo.obj.data
+                            val info = arrayListOf<FleetInfo>()
                             var id = ""
                             for (i in c) {
-                                if(!i.id.contains("org")){
+                                if (!i.id.contains("org")) {
                                     id = if (TextUtils.isEmpty(id)) i.id else id + "," + i.id
+                                } else {
+                                    info.add(FleetInfo(i.name, i.id, 0, 0, 0, 0))
                                 }
                             }
-                            view.carId(id)
+                            view.carId(id, info)
                         } else {
                             view.fail(carInfo.error)
                         }
@@ -79,10 +83,46 @@ class MainPresenter(val view: MainContract.MainView) : MainContract.MainPresente
                         view.fail(p0)
                     }
 
-                    override fun success(carlocation : CarLocation) {
+                    override fun success(carlocation: CarLocation) {
                         view.carInfo(carlocation)
                     }
 
                 })
+    }
+
+
+    override fun carInfo(info: ArrayList<FleetInfo>, carLocation: CarLocation) {
+        val objList = carLocation.obj.data
+        for (i in info) {
+            val id = i.id.split("-")[1]
+            var num = 1
+            var offLineCount = 1
+            var pauseCount = 1
+            var onLineCount = 1
+            for (k in objList) {
+                if (id.equals("${k.organ}")) {
+                    i.count = num
+                    num++
+                    if (k.linkStatus == 1 && k.speed <= 0) {
+                        i.pause = pauseCount
+                        pauseCount++
+                    } else if (k.linkStatus == 1 && k.speed > 0) {
+                        i.onLine = onLineCount
+                        onLineCount++
+                    } else {
+                        i.offLine = offLineCount
+                        offLineCount++
+                    }
+                }
+            }
+        }
+        val iterator = info.iterator()
+        while (iterator.hasNext()) {
+            val net = iterator.next()
+            if (net.count == 0) {
+                iterator.remove()
+            }
+        }
+        view.fleet(info)
     }
 }

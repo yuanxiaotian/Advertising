@@ -44,14 +44,14 @@ public class CarLocation {
          * data : [{"DriverB":"","Odometer":19276.900390625,"recvTime":1528427442000,"DeviceNo":6258129,"TrailerStatus":0,"ExStatusStr":"","Direction":86,"PointInfo":"","TrailerName":"","Driver":"","Oil":"0.0","T4":"0","OffsetLat":23.159047290119855,"DriverBPhone":"","Organ":10730,"AlarmStatus":"","RoadName":"","Lon":113.495285,"OffsetLon":113.50061113109118,"ExStatus":0,"Lat":23.1617,"SN":0,"DriverPhone":"","GPSStatus":"ACC开,定位,天线正常","T1":"0","T3":"0","GpsTime":1528428246000,"T2":"0","ExceptionStatus":"","Status":65536,"Speed":0,"RegName":"粤ABS145","SimCard":"14716258129","StatusStr":"11100010101001","linkStatus":1,"IsTrailer":0,"PlaceName":"","VehicleID":46626},{"DriverB":"","Odometer":44041.5,"recvTime":1528427395000,"DeviceNo":6418485,"TrailerStatus":0,"ExStatusStr":"","Direction":198,"PointInfo":"","TrailerName":"","Driver":"","Oil":"0.0","T4":"0","OffsetLat":23.101777556172298,"DriverBPhone":"","Organ":10730,"AlarmStatus":"","RoadName":"","Lon":113.53495,"OffsetLon":113.54013812057802,"ExStatus":0,"Lat":23.104567,"SN":0,"DriverPhone":"","GPSStatus":"ACC开,定位,天线正常","T1":"0","T3":"0","GpsTime":1528428225000,"T2":"0","ExceptionStatus":"","Status":65536,"Speed":0,"RegName":"粤ABU146","SimCard":"14716418485","StatusStr":"11100010101001","linkStatus":1,"IsTrailer":0,"PlaceName":"","VehicleID":47546},{"DriverB":"","Odometer":50364.3984375,"recvTime":1528427462000,"DeviceNo":6418483,"TrailerStatus":0,"ExStatusStr":"","Direction":273,"PointInfo":"","TrailerName":"","Driver":"","Oil":"0.0","T4":"0","OffsetLat":23.330849536415357,"DriverBPhone":"","Organ":10730,"AlarmStatus":"","RoadName":"","Lon":112.83105,"OffsetLon":112.8361707100171,"ExStatus":0,"Lat":23.333567,"SN":0,"DriverPhone":"","GPSStatus":"ACC开,定位,天线正常","T1":"0","T3":"0","GpsTime":1528428293000,"T2":"0","ExceptionStatus":"","Status":98304,"Speed":0,"RegName":"粤ABM418","SimCard":"14716418483","StatusStr":"11100010101001","linkStatus":1,"IsTrailer":0,"PlaceName":"","VehicleID":47544},{"DriverB":"","Odometer":61522.1015625,"recvTime":1528427452000,"DeviceNo":6418481,"TrailerStatus":0,"ExStatusStr":"","Direction":84,"PointInfo":"","TrailerName":"","Driver":"","Oil":"0.0","T4":"0","OffsetLat":23.159137197505945,"DriverBPhone":"","Organ":10730,"AlarmStatus":"","RoadName":"","Lon":113.47615,"OffsetLon":113.48154108093638,"ExStatus":0,"Lat":23.161734,"SN":0,"DriverPhone":"","GPSStatus":"ACC开,定位,天线正常","T1":"0","T3":"0","GpsTime":1528428283000,"T2":"0","ExceptionStatus":"","Status":98304,"Speed":0,"RegName":"粤ABM428","SimCard":"14716418481","StatusStr":"11100010101001","linkStatus":1,"IsTrailer":0,"PlaceName":"","VehicleID":48624},{"DriverB":"","Odometer":20117.19921875,"recvTime":1528427421000,"DeviceNo":6258094,"TrailerStatus":0,"ExStatusStr":"","Direction":259,"PointInfo":"","TrailerName":"","Driver":"","Oil":"0.0","T4":"0","OffsetLat":23.14004813866573,"DriverBPhone":"","Organ":10730,"AlarmStatus":"","RoadName":"","Lon":113.44785,"OffsetLon":113.4533224115319,"ExStatus":0,"Lat":23.142584,"SN":0,"DriverPhone":"","GPSStatus":"ACC开,定位,天线正常","T1":"0","T3":"0","GpsTime":1528428252000,"T2":"0","ExceptionStatus":"","Status":65536,"Speed":0,"RegName":"粤ABU445","SimCard":"14716258094","StatusStr":"11100010101001","linkStatus":1,"IsTrailer":0,"PlaceName":"","VehicleID":46615}]
          */
 
-        private long lastTime;
+        private String lastTime;
         private List<DataBean> data;
 
-        public long getLastTime() {
+        public String getLastTime() {
             return lastTime;
         }
 
-        public void setLastTime(long lastTime) {
+        public void setLastTime(String lastTime) {
             this.lastTime = lastTime;
         }
 
@@ -108,7 +108,7 @@ public class CarLocation {
             private String DriverB;
             private double Odometer;
             private long recvTime;
-            private int DeviceNo;
+            private long DeviceNo;
             private int TrailerStatus;
             private String ExStatusStr;
             private int Direction;
@@ -134,7 +134,7 @@ public class CarLocation {
             private long GpsTime;
             private String T2;
             private String ExceptionStatus;
-            private int Status;
+            private long Status;
             private int Speed;
             private String RegName;
             private String SimCard;
@@ -168,11 +168,11 @@ public class CarLocation {
                 this.recvTime = recvTime;
             }
 
-            public int getDeviceNo() {
+            public long getDeviceNo() {
                 return DeviceNo;
             }
 
-            public void setDeviceNo(int DeviceNo) {
+            public void setDeviceNo(long DeviceNo) {
                 this.DeviceNo = DeviceNo;
             }
 
@@ -376,11 +376,11 @@ public class CarLocation {
                 this.ExceptionStatus = ExceptionStatus;
             }
 
-            public int getStatus() {
+            public long getStatus() {
                 return Status;
             }
 
-            public void setStatus(int Status) {
+            public void setStatus(long Status) {
                 this.Status = Status;
             }
 

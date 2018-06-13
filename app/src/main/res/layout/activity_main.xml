@@ -13,35 +13,108 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@+id/webView2"
+        app:layout_constraintBottom_toTopOf="@+id/viewFlipper"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
-    <com.youth.banner.Banner
-        android:id="@+id/webView2"
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/tv_title"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="1dp"
-        android:background="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_height="40dp"
+        android:background="@drawable/shape_square_top"
+        android:gravity="center_vertical|left"
+        android:textColor="@android:color/black"
+        android:textSize="15sp"
+        android:paddingLeft="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/viewFlipper"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/webView3"
-        app:layout_constraintTop_toBottomOf="@+id/bmapView" />
+        app:layout_constraintRight_toLeftOf="@+id/tv_title1" />
 
 
-    <com.cangmaomao.advertising.ABSJZVideoPlayerStandard
-        android:id="@+id/webView3"
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/tv_title1"
+        android:layout_width="96dp"
+        android:layout_height="40dp"
+        android:background="@drawable/shape_square_top"
+        android:gravity="center_vertical|center"
+        android:textColor="#9CD221"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toTopOf="@+id/viewFlipper"
+        app:layout_constraintLeft_toRightOf="@+id/tv_title"
+        app:layout_constraintRight_toLeftOf="@+id/tv_title2" />
+
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/tv_title2"
+        android:layout_width="96dp"
+        android:layout_height="40dp"
+        android:background="@drawable/shape_square_top"
+        android:gravity="center_vertical|center"
+        android:textColor="#FFC010"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toTopOf="@+id/viewFlipper"
+        app:layout_constraintLeft_toRightOf="@+id/tv_title1"
+        app:layout_constraintRight_toLeftOf="@+id/tv_title3" />
+
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/tv_title3"
+        android:layout_width="96dp"
+        android:layout_height="40dp"
+        android:background="@drawable/shape_square_top"
+        android:gravity="center_vertical|center"
+        android:textColor="#6B6B6B"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toTopOf="@+id/viewFlipper"
+        app:layout_constraintLeft_toRightOf="@+id/tv_title2"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <ViewFlipper
+        android:id="@+id/viewFlipper"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginLeft="1dp"
-        android:layout_marginTop="1dp"
-        android:background="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toRightOf="@+id/webView2"
+        android:layout_height="wrap_content"
+        android:autoStart="true"
+        android:flipInterval="3000"
+        android:inAnimation="@anim/anim_marquee_in"
+        android:outAnimation="@anim/anim_marquee_out"
+        app:layout_constraintBottom_toTopOf="@+id/cardView"
+        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bmapView" />
+
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="3dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@+id/cardView1"
+        app:layout_constraintTop_toBottomOf="@+id/viewFlipper">
+
+        <com.youth.banner.Banner
+            android:id="@+id/webView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </android.support.v7.widget.CardView>
+
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/cardView1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="3dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/cardView"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewFlipper">
+
+        <com.cangmaomao.advertising.ABSJZVideoPlayerStandard
+            android:id="@+id/webView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </android.support.v7.widget.CardView>
 
 
     <android.support.v7.widget.Toolbar
@@ -52,7 +125,20 @@
         android:background="@drawable/shape_square"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:navigationIcon="@drawable/icon"
-        app:title="@string/app_name" />
+        app:title=" ">
+
+
+        <android.support.v7.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:drawableLeft="@drawable/icon"
+            android:drawablePadding="10dp"
+            android:text="@string/app_name_all"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+
+
+    </android.support.v7.widget.Toolbar>
 
 </android.support.constraint.ConstraintLayout>
