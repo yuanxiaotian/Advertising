@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0,minimum-scale=1.0">
+    <title>Title</title>
+
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <link href="http://libs.baidu.com/bootstrap/3.0.3/css/bootstrap.min.css"
+          rel="stylesheet">
+</head>
+<script>
+
+    $(function() {// 初始化内容
+
+
+
+    });
+
+
+
+
+    function computeMoney() {
+        // =IF(B2=3,(B1+B3)/10000*335,(B1+B3)/10000*481)
+        var year=$("#year1").val();
+
+        var loanAmount =parseFloat($("#loanAmount").val());
+
+
+        if(loanAmount>=80000){
+            $("#gps").text(1600);
+        }
+        else {
+            $("#gps").text(0);
+        }
+
+        var gps =parseFloat($("#gps").text());
+        console.log(loanAmount);
+
+        if (year==3){
+            var monthPay=(loanAmount+gps)/10000*335;
+            var monthReturn=0;
+            console.log(monthPay);
+            var Rmonth=monthPay-monthReturn;
+            $("#monthPay").text(monthPay.toFixed(2));
+            $("#monthReturn").text(monthReturn.toFixed(2));
+            $("#Rmonth").text(Rmonth.toFixed(2));
+        }
+        else {
+            var monthPay=(loanAmount+gps)*1.0/10000.0*481.0;
+            //alert(monthPay);
+            var monthReturn=monthPay-((loanAmount+gps)/24+(loanAmount+gps)*0.0057);
+            var Rmonth=monthPay-monthReturn;
+
+
+            $("#monthPay").text(monthPay.toFixed(2));
+            $("#monthReturn").text(monthReturn.toFixed(2));
+            $("#Rmonth").text(Rmonth.toFixed(2));
+        }
+    }
+
+
+
+
+</script>
+
+<body style="margin: 10px;">
+
+
+<div class="form-group" style="margin-top: 10px;">
+    <label for="loanAmount">贷款金额
+    </label> <input style="height: 50px;" type="text" oninput="computeMoney()"
+                    class="form-control" maxlength="20" id="loanAmount" placeholder="贷款金额">
+</div>
+
+
+<div class="form-group" style="margin-top: 10px;">
+    <label for="year1">贷款年限
+    </label> <input style="height: 50px;" type="text" oninput="computeMoney()"
+                    class="form-control" maxlength="20" id="year1" placeholder="贷款年限" value="3">
+</div>
+
+
+<div class="form-group" >
+    <label for="gps">
+
+    </label>
+    <button type="button" style="height: 50px;width: 100%;margin-top: 10px;"
+            class="btn btn-danger showInfo" onclick="computeMoney()">计算
+    </button>
+</div>
+
+
+<div class="form-group" style="margin-top: 10px;">
+    <label for="gps">GPS费:<label id="gps" style="color:red"></label>
+
+    </label>
+</div>
+
+
+<div class="form-group" style="margin-top: 10px;">
+    <label for="monthPay">月供:<label id="monthPay" style="color:red"></label>
+
+    </label>
+</div>
+<div class="form-group" style="margin-top: 10px;">
+    <label for="monthReturn">月返 :<label id="monthReturn" style="color:red"></label>
+    </label>
+</div>
+
+<div class="form-group" style="margin-top: 10px;">
+    <label for="Rmonth">实际月供:<label id="Rmonth" style="color:red"></label>
+    </label>
+</div>
+
+
+</body>
+</html>

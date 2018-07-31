@@ -3,9 +3,13 @@ package com.cangmaomao.advertising
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.AppCompatEditText
@@ -20,14 +24,17 @@ import cn.jzvd.*
 import com.amap.api.maps.AMap
 import com.amap.api.maps.CameraUpdateFactory
 import com.amap.api.maps.model.*
-import com.cangmaomao.advertising.app.App
+import com.cangmaomao.lib.utils.AppNetworkMgr
 import com.cangmaomao.lib.utils.GlideImageLoader
 import com.cangmaomao.lib.utils.e
-import com.cangmaomao.lib.utils.longToast
 import com.cangmaomao.lib.utils.shortToast
+import com.facebook.drawee.backends.pipeline.Fresco
 import com.youth.banner.BannerConfig
-import com.youth.banner.Transformer
 import kotlinx.android.synthetic.main.activity_main.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
+import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -36,26 +43,22 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
 
     private val TAG = MainActivity::class.java.simpleName
 
-    //    private lateinit var userName = "ZHWL"
-//    private lateinit var password = "123654"
     private lateinit var userName: String
-    private lateinit var password: String
+    private lateinit var userName1: String
 
     private lateinit var queryTime: String
-
-//    private val path = "http://xuli008.0324.bftii.com/time.mp4"
 
     private lateinit var presenter: MainContract.MainPresenter
 
     private lateinit var aMap: AMap
 
-    private val timer = Timer()
+    private var timer = Timer()
 
-    private val timer1 = Timer()
+    private val timer2 = Timer()
 
     private lateinit var timerTask: TimerTask
 
-    private lateinit var timerTask1: TimerTask
+    private lateinit var timerTask2: TimerTask
 
     var i = 0
 
@@ -67,97 +70,96 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
 
     var lastTime = "0"
 
+    private lateinit var dialog: AlertDialog
+
+    val builder = LatLngBounds.builder()
+    val absMarker = TreeMap<Int, Marker>()
+
+    var s: Int = 0
+
+    lateinit var info: ArrayList<FleetInfo>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val app = application as App
-        if (app.isFlag) {
-            //竖屏
-            setContentView(R.layout.activity_main)
-            setSupportActionBar(toolbar);
-            bmapView.onCreate(savedInstanceState)
-            aMap = bmapView.map
-            aMap.isMyLocationEnabled = false
-            aMap.uiSettings.setLogoBottomMargin(-100)
-            aMap.uiSettings.isZoomControlsEnabled = false
-            MainPresenter(this)
-            timerTask1 = object : TimerTask() {
-                override fun run() {
-                    presenter.login(TAG)
+        setContentView(R.layout.activity_main)
+        setSupportActionBar(toolbar)
+        bmapView.onCreate(savedInstanceState)
+
+        aMap = bmapView.map
+        aMap.isMyLocationEnabled = false
+        aMap.uiSettings.setLogoBottomMargin(-100)
+        aMap.uiSettings.isZoomControlsEnabled = false
+        MainPresenter(this)
+        dialog = AlertDialog.Builder(this@MainActivity).create()
+        val view = View.inflate(this, R.layout.activity_wifi, null)
+        dialog.setView(view)
+        dialog.show()
+        timerTask2 = object : TimerTask() {
+            override fun run() {
+                val isFlag = AppNetworkMgr.isWifiConnected(this@MainActivity)
+                if (isFlag) {
+                    runOnUiThread {
+                        timer2.cancel()
+                        timerTask2.cancel()
+                        start()
+                        dialog.dismiss()
+                    }
+
                 }
             }
-            preferences = applicationContext.getSharedPreferences("LOGIN", Context.MODE_PRIVATE)
-            userName = preferences.getString("accout", "")
-            password = preferences.getString("pwd", "")
-            url = preferences.getString("url", "")
+        }
+        timer2.schedule(timerTask2, 0, 2000)
+    }
 
-            if (TextUtils.isEmpty(userName) && TextUtils.isEmpty(password)) {
-                val dialog = AlertDialog.Builder(this)
-                dialog.setTitle("登录")
-                val view = View.inflate(this, R.layout.activity_dialog, null)
-                val accountId = view.findViewById<AppCompatEditText>(R.id.account)
-                val pwdId = view.findViewById<AppCompatEditText>(R.id.pwd)
-                dialog.setView(view)
-                dialog.setCancelable(false)
-                dialog.setPositiveButton("登录", DialogInterface.OnClickListener { dialogInterface: DialogInterface, v: Int ->
-                    userName = accountId.text.toString()
-                    password = pwdId.text.toString()
-                    timer1.schedule(timerTask1, 0, 7200 * 1000)
-                })
-                dialog.show()
-            } else {
-                timer1.schedule(timerTask1, 0, 7200 * 1000)
-            }
+    fun start() {
+        preferences = applicationContext.getSharedPreferences("LOGIN", Context.MODE_PRIVATE)
+        userName = preferences.getString("account", "")
+        userName1 = preferences.getString("account1", "")
+        url = preferences.getString("url", "")
+        if (TextUtils.isEmpty(url)) {
+            url = "xuli008.0324.bftii"
+        }
 
-            cardView.radius = 10f
-            cardView.cardElevation = 10f
-
-
-            cardView1.radius = 10f
-            cardView1.cardElevation = 10f
-
-            val window = this.windowManager
-            val width = window.defaultDisplay.width
-            val params = cardView.layoutParams
-            params.height = width / 2
-            cardView.layoutParams = params
-
-            val params1 = cardView1.layoutParams
-            params.height = width / 2
-            cardView1.layoutParams = params1
-
-            if (!TextUtils.isEmpty(url)) {
-                initBannerAndVideo()
-            }
-
-
+        if (TextUtils.isEmpty(userName)) {
+            val dialog = AlertDialog.Builder(this)
+            dialog.setTitle("账号设置")
+            val view = View.inflate(this, R.layout.activity_dialog, null)
+            val account = view.findViewById<AppCompatEditText>(R.id.account)
+            val account1 = view.findViewById<AppCompatEditText>(R.id.account1)
+            dialog.setView(view)
+            dialog.setCancelable(false)
+            dialog.setPositiveButton("确定", { dialogInterface: DialogInterface, i: Int ->
+                userName = account.text.toString()
+                userName1 = account1.text.toString()
+                if (TextUtils.isEmpty(userName1)) {
+                    startService(Intent(this, AbsService::class.java).putExtra("account", userName))
+                } else {
+                    startService(Intent(this, AbsService::class.java).putExtra("account", userName)
+                            .putExtra("account1", userName1))
+                }
+            })
+            dialog.show()
         } else {
-            setContentView(R.layout.activity_main_h)
-            bmapView.onCreate(savedInstanceState)
-            aMap = bmapView.map
-            aMap.isMyLocationEnabled = false
-            aMap.uiSettings.setLogoBottomMargin(-100)
-            aMap.uiSettings.isZoomControlsEnabled = false
-            MainPresenter(this)
-            timerTask1 = object : TimerTask() {
-                override fun run() {
-                    presenter.login(TAG)
-                }
-            }
-            timer1.schedule(timerTask1, 0, 7200 * 1000)
+            startService(Intent(this, AbsService::class.java).putExtra("account", userName)
+                    .putExtra("account1", userName1))
+        }
+        cardView.radius = 10f
+        cardView.cardElevation = 10f
+        cardView1.radius = 10f
+        cardView1.cardElevation = 10f
 
-            val window = this.windowManager
-            val height = window.defaultDisplay.height
-            val params = webView2.layoutParams
-            params.width = height / 2
-            webView2.layoutParams = params
+        val window = this.windowManager
+        val width = window.defaultDisplay.width
+        val params = cardView.layoutParams
+        params.height = width / 2
+        cardView.layoutParams = params
 
-            val params1 = webView3.layoutParams
-            params.height = height / 2
-            webView3.layoutParams = params1
+        val params1 = cardView1.layoutParams
+        params.height = width / 2
+        cardView1.layoutParams = params1
 
-            if (!TextUtils.isEmpty(url)) {
-                initBannerAndVideo()
-            }
+        if (!TextUtils.isEmpty(url)) {
+            initBannerAndVideo()
         }
     }
 
@@ -171,7 +173,7 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
                 "loginType" to "sys_user",
                 "module" to "freight",
                 "username" to userName,
-                "password" to password,
+//                "password" to password,
                 "backUrl" to "/Map/MapArea/GetOrgTreeAjax"
         )
     }
@@ -180,29 +182,18 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
         shortToast(this, "登录异常!")
     }
 
-    lateinit var info: ArrayList<FleetInfo>
     override fun carId(id: String, info: ArrayList<FleetInfo>) {
-        if (!isFlag) {
-            timerTask = object : TimerTask() {
-                override fun run() {
-                    isFlag = true
-                    presenter.carLocation(TAG, mapOf("_action" to "queryChangedFromCache",
-                            "lastTime" to lastTime,
-                            "queryList" to id))
-                }
-            }
-        }
-        timer.schedule(timerTask, 0, 1000 * 40);
+        presenter.carLocation(TAG, mapOf("_action" to "queryChangedFromCache",
+                "lastTime" to lastTime,
+                "queryList" to id))
         this.info = info
     }
 
-    val builder = LatLngBounds.builder()
-    val absMarker = TreeMap<Int, Marker>()
     @SuppressLint("SetTextI18n")
     override fun carInfo(carLocation: CarLocation) {
         val edit = preferences.edit()
-        edit.putString("accout", userName)
-        edit.putString("pwd", password)
+        edit.putString("account", userName)
+        edit.putString("account1", userName1)
         edit.apply()
         var count = 0
         var stop = 0
@@ -256,50 +247,58 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
                 pause++
             }
         }
-        e("${markers.size}b")
-        aMap.moveCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 80))
+        aMap.moveCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 60))
         tv_title.text = "合计:${absMarker.size}"
-        tv_title1.text = "运行:${count}"
-        tv_title2.text = "停车:${pause}"
-        tv_title3.text = "离线:${stop}"
+        tv_title1.text = "运行:$count"
+        tv_title2.text = "停车:$pause"
+        tv_title3.text = "离线:$stop"
         presenter.carInfo(info, carLocation)
-
     }
 
     override fun fleet(info: ArrayList<FleetInfo>) {
-        var k = 0
-        lateinit var view: View
-        lateinit var linearLayout: LinearLayout
-        for (i in info) {
-            if (k % 3 == 0) {
-                linearLayout = LinearLayout(this)
-                linearLayout.orientation = LinearLayout.VERTICAL
-                linearLayout.removeAllViews()
-            }
-            val itemView = layoutInflater.inflate(R.layout.activity_view_car_item, null)
-            itemView.findViewById<AppCompatTextView>(R.id.textView1).text = i.name
-            itemView.findViewById<AppCompatTextView>(R.id.textView2).text = "     ${i.onLine}"
-            itemView.findViewById<AppCompatTextView>(R.id.textView3).text = "     ${i.pause}"
-            itemView.findViewById<AppCompatTextView>(R.id.textView4).text = "     ${i.offLine}"
-            linearLayout.addView(itemView)
-            if ((info.size <= 2 && k % 3 == 1) || k % 3 == 2) {
-                linearLayout.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (if (info.size <= 3) itemView.layoutParams.height * info.size else itemView.layoutParams.height * 3))
-                viewFlipper.addView(linearLayout)
-            }
-            k++
-        }
-        val p = viewFlipper.layoutParams
-        p.height = linearLayout.layoutParams.height
-        viewFlipper.layoutParams = p
+        try {
+            lateinit var linearLayout: LinearLayout
+            lateinit var itemView: View
+            viewFlipper.removeAllViews()
 
-        if (info.size < 3) {
-            viewFlipper.stopFlipping()
+
+            val list = ArrayList<MutableList<FleetInfo>>()
+
+
+            var j = 0
+            for ((k, i) in info.withIndex()) {
+                if (k % 3 == 0) {
+                    linearLayout = LinearLayout(this)
+                    linearLayout.orientation = LinearLayout.VERTICAL
+                    linearLayout.removeAllViews()
+                }
+                itemView = layoutInflater.inflate(R.layout.activity_view_car_item, null)
+                itemView.findViewById<AppCompatTextView>(R.id.textView1).text = i.name
+                itemView.findViewById<AppCompatTextView>(R.id.textView2).text = "${i.onLine}"
+                itemView.findViewById<AppCompatTextView>(R.id.textView3).text = "${i.pause}"
+                itemView.findViewById<AppCompatTextView>(R.id.textView4).text = "${i.offLine}"
+                linearLayout.addView(itemView)
+                if (info.size == 1 || (k > 0 && info.size <= 2) || (k > 0 && k % 3 == 2) || k == info.size - 1) {
+                    linearLayout.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (if (info.size <= 3) itemView.layoutParams.height * info.size else itemView.layoutParams.height * 3))
+                    viewFlipper.addView(linearLayout)
+                }
+            }
+            val p = viewFlipper.layoutParams
+            p.height = if (info.size <= 3) itemView.layoutParams.height * info.size else itemView.layoutParams.height * 3
+            viewFlipper.layoutParams = p
+
+            if (info.size <= 3) {
+                viewFlipper.stopFlipping()
+            } else {
+                viewFlipper.startFlipping()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu)
         return true
     }
 
@@ -307,39 +306,65 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
         val id = item!!.itemId
         when (id) {
             R.id.manage -> {
-                val view = View.inflate(this, R.layout.activity_dialog2, null);
+                val view = View.inflate(this, R.layout.activity_dialog2, null)
                 val mUrl = view.findViewById<AppCompatEditText>(R.id.url)
                 AlertDialog.Builder(this).setTitle("Url设置").setView(view).setPositiveButton("确定", DialogInterface.OnClickListener { dialogInterface: DialogInterface, v: Int ->
                     val u = mUrl.text.toString()
                     url = "http://${u}.com/"
-//                    url = "http://xuli008.0324.bftii.com/"
                     preferences.edit().putString("url", url).apply()
                     initBannerAndVideo()
+                }).show()
+            }
+            R.id.acc -> {
+                //跳转到开启智能安装服务的界面
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                startActivity(intent)
+            }
+
+            R.id.videos -> {
+                val view = View.inflate(this, R.layout.activity_dialog2, null)
+                val name = view.findViewById<AppCompatEditText>(R.id.url)
+                name.setText("")
+                AlertDialog.Builder(this).setTitle("视频名称").setView(view).setPositiveButton("确定", DialogInterface.OnClickListener { dialogInterface: DialogInterface, v: Int ->
+                    webView3.setUp("$url${name.text}.mp4", JZVideoPlayer.SCREEN_WINDOW_NORMAL, "旭利")
+                    webView3.startVideo()
+                    webView3.setProgressListener {
+                        e("进度:$it")
+                        if (it == 99) {
+                            webView3.initTextureView()
+                            webView3.addTextureView()
+                            JZMediaManager.setDataSource(webView3.dataSourceObjects)
+                            JZMediaManager.setCurrentDataSource(JZUtils.getCurrentFromDataSource(webView3.dataSourceObjects, webView3.currentUrlMapIndex))
+                            webView3.onStatePreparing()
+                            webView3.onEvent(JZUserAction.ON_CLICK_START_ERROR)
+                        }
+                    }
                 }).show()
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
-
     fun initBannerAndVideo() {
-        val list: List<String> = listOf(
-                "${url}5.jpg",
-                "${url}5.jpg",
-                "${url}11.jpg",
-                "${url}12.jpg",
-                "${url}5.jpg"
-        )
+
+        val count = intent.getIntExtra("count", 0)
+        val list = arrayListOf<String>()
+        for (i in 0 until count) {
+            list.add("$url$i.jpg")
+        }
+        val imagePipe = Fresco.getImagePipeline()
+        imagePipe.clearCaches()
+
         webView2.setImageLoader(GlideImageLoader())
-        webView2.setBannerAnimation(Transformer.DepthPage);
         webView2.update(list)
-        webView2.setDelayTime(5000)
-        webView2.setIndicatorGravity(BannerConfig.NOT_INDICATOR)
+        webView2.setDelayTime(6000)
+        webView2.setBannerStyle(BannerConfig.NOT_INDICATOR)
         webView2.start()
 
         webView3.setUp("${url}time.mp4", JZVideoPlayer.SCREEN_WINDOW_NORMAL, "旭利")
         webView3.startVideo()
         webView3.setProgressListener {
+            e("进度:$it")
             if (it == 99) {
                 webView3.initTextureView()
                 webView3.addTextureView()
@@ -351,12 +376,33 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onMessageEvent(event: MainEvent) {
+        if (event.flag) {
+            if (!isFlag) {
+                timerTask = object : TimerTask() {
+                    override fun run() {
+                        isFlag = true
+                        presenter.getOrgTreeAjax(TAG)
+                    }
+                }
+                timer.schedule(timerTask, 0, 1000 * 60)
+            }
+        } else {
+            val uri = Uri.fromFile(File(Environment.getExternalStorageDirectory().absolutePath + "/v.apk"))
+            val localIntent = Intent(Intent.ACTION_VIEW)
+            localIntent.setDataAndType(uri, "application/vnd.android.package-archive")
+            startActivity(localIntent)
+        }
+    }
+
 
     /**
      * 方法必须重写
      */
     override fun onResume() {
         super.onResume()
+        EventBus.getDefault().register(this)
         bmapView.onResume()
     }
 
@@ -366,6 +412,8 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
     override fun onPause() {
         super.onPause()
         bmapView.onPause()
+        JZVideoPlayerStandard.releaseAllVideos()
+
     }
 
     /**
@@ -382,6 +430,7 @@ class MainActivity : AppCompatActivity(), MainContract.MainView {
     override fun onDestroy() {
         super.onDestroy()
         bmapView.onDestroy()
+        EventBus.getDefault().unregister(this)
     }
 
 

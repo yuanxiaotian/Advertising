@@ -8,4 +8,14 @@
         android:title="管理"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/videos"
+        android:title="换视频"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/acc"
+        android:title="开启无障碍"
+        app:showAsAction="never" />
+
 </menu>

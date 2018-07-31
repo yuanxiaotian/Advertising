@@ -6,8 +6,8 @@ ext {
             sdk_version  : 27,
             min_sdk      : 16,
             target_sdk   : 27,
-            code         : 1,
-            name         : "1.0.0",
+            code         : 5,
+            name         : "2.0.0",
             tools_version: "27.0.3",
             id           : "com.cangmaomao.project"
 
@@ -30,7 +30,7 @@ ext {
             retrofit2Adapter = "2.2.0",
             kotlin_version = "1.2.41",
             lib_Adapter = "1.0.1",
-            lib_Request = "1.0.6",
+            lib_Request = "1.1.6",
             greendao = "3.2.2",
             greendao_generator = "3.2.2",
             banner = "1.4.10",
@@ -59,7 +59,8 @@ ext {
             greendao_generator     : "org.greenrobot:greendao-generator:$rootProject.greendao_generator",
             banner                 : "com.youth.banner:banner:$rootProject.banner",
             fresco                 : "com.facebook.fresco:fresco:$rootProject.fresco",
-            cardview                : "com.android.support:cardview-v7:$rootProject.supportLibraryVersion",
+            cardview               : "com.android.support:cardview-v7:$rootProject.supportLibraryVersion",
+            eventbus               : "org.greenrobot:eventbus:3.1.1",
             commonLib              : ":Library"
     ]
 }

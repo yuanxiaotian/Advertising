@@ -13,6 +13,9 @@
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -20,9 +23,18 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"
+    <uses-permission
+        android:name="android.permission.CHANGE_CONFIGURATION"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <uses-permission
+        android:name="android.permission.READ_LOGS"
+        tools:ignore="ProtectedPermissions" />
 
 
     <uses-feature
@@ -37,14 +49,22 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
+
         android:windowSoftInputMode="adjustResize|stateHidden">
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".Config"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait" />
 
         <receiver android:name=".CMMBroadcastReceiver">
             <intent-filter>
@@ -56,20 +76,38 @@
         </receiver>
 
         <meta-data
-            android:name="com.taobao.android.hotfix.IDSECRET"
-            android:value="24928429" />
-        <meta-data
-            android:name="com.taobao.android.hotfix.APPSECRET"
-            android:value="185bbc2b9719785d1ae555c8136289d4" />
-        <meta-data
-            android:name="com.taobao.android.hotfix.RSASECRET"
-            android:value="MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCIk/YDTp3AjRifi11/7dao5s3q8xulM0x8ClpUB+7741PYogqaOf7migbzqfjSNAVHaILw2l+I3sYMNhs1nkJrzOvD17I/9PEHuAJsyws6Y4n/CgOaDPiGtOtFGypvBanZq6RVrdIkbuO9Oqn+AJiN8rw1yccnUWMd5fsF9xDIj1UzZMHuqPxao4+Qjyhsw+dD+9O4serK/GBsw3i3qtOPDGtMhUhKgIj9apCWQGa79+7toDc+WNo1LK69VqGKwu2X+NoDKyDrF1s3OfSWUq9EtDkflOM0O9HPruZocgJXukLU+v7QfbyGquYuzCF6hgwo42xV69cTAq0dvbe3ZwlFAgMBAAECggEAdWwIcdVwaXClf93ZGDjKelJdLaev1/tfwbFA8cgUXrmWh8ThKrG8BkcbLPiwdUDGXRtsoFiPFGS7jxohkJqs7nOzK6BRnw0fAQziANkcoSmdJgldCWAnd+Ep+TMe627KFdutIQCdkDdKU5GRP1ER19CeofwF3jbp6XWluP4ujs7xbfjwW4VAD8vZfQxY0+JIWS38aCClJdbxE9pqNOHOimvFDjEv1Mkp+jj4qdI1H9UcJnwlHVvLVqZgiZNqcVqhHqCNpYb97RZsXLiyulSBeMROou/+SGp7Z/yN2KqGpa4Co73toEgzsn+P9EqP1yvi6zj3A5IEnpBgzbjVNhnjbQKBgQDNoOjugBs7dsdO0rBKsAu2R9r0AtLXSwsrq9ZwLaqQrbb8GPg3o86MRE8Nt25v+y4XORJktBpzU/wuS5dIfJ/v7vNRZPZ9yBUyDNq1iCMAMfFnItMI7vXy/EzGAJafvgJF4i5ygpAZ1J9G+jJcNsyAoJGZaKElhwqK0YLDrqtsywKBgQCqCNkAUHuEnLE+UOIiKjPEatY7SsAiVPcmNgRkEd9Z6Oylm/VIRaSVy1YCLIXLG8+EdlbgO01L8IiwYwuLuFszOxJolPPIO8qTCBB03iW+ZaXgcYVORr3U5EIALZcZtGGTMk361ztS6Ne2CElCn64/6Tj7397MtsATS33Jm5gwLwKBgGq02suRbRBRliIAUX2gl6NS7Ht9z53rknNqK9Bw0jdb/j4aUwzEk5XUiNWMX+H6jbN9aV8a2zMH3TDFB0+VZIXlER0m8IbbQqyDYSec6tTaFfS4bJ0RLE6YwNprSb7BonpTYlkICfFtle4GPgX+ZedF6+iZFC7eQglBqcMULF87AoGAVzICVi7vqKnSGurPjEWoFmnTQsSqkvCPbYD173ta1nikIqk/t7g/FrIXgTXjxqyUVpF5K7Q9h1vqPMoN+bCo1DTO0+LOwTgoQg44ojXplSH7VoXgnquYXbxQPFckzYG7KAj8BE6rlXDibe8B4rCQYyXumvvK/aAaD8r+zoyEFvECgYEAuduAnjW02B+iCoq4kvdJZQOsfbwZf4pcmifEfPx3xwNmP8JE4O+sk4Roc2+IHf7PBH13uuoCw/LLNkLypoi1UVaa8kUBPhrpZm8fYAcL3glPPIA/qSeX0l3XOIsLjUamFGkcqygAvEvi0RXvOorK2fZHXrG2WnNBO2x8mcKePtQ=" />
-
-
-        <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="22293e933e47f57ca48ca3b29726b641"/>
+            android:value="22293e933e47f57ca48ca3b29726b641" />
 
+        <service
+            android:name=".AbsService"
+            android:permission="网络请求" />
+
+        <service
+            android:name=".DownService"
+            android:permission="版本更新" />
+
+        <receiver android:name=".UpdateReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".MyAccessibilityService"
+            android:label="智能安装App"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
     </application>
 
 </manifest>

@@ -6,6 +6,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
+import com.cangmaomao.lib.utils.AppNetworkMgr;
+
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class CMMBroadcastReceiver extends BroadcastReceiver {
 
     private static final String TAG = "BootBroadcastReceiver";
@@ -15,10 +20,10 @@ public class CMMBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(ACTION_BOOT)) {
-            Intent i = new Intent(context, MainActivity.class);
+            Intent i = new Intent(context, Config.class);
+            i.putExtra("state", 100);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(i);
-            Log.i(TAG, "BootBroadcastReceiver onReceive(), Do thing!");
         }
     }
 }

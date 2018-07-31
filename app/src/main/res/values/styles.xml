@@ -1,2 +1,6 @@
 <resources>
+
+    <style name="config_bg">
+        <item name="android:windowBackground">@drawable/start_pager</item>
+    </style>
 </resources>

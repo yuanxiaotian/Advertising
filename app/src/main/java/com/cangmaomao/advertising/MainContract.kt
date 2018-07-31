@@ -1,5 +1,6 @@
 package com.cangmaomao.advertising
 
+import android.content.Context
 import com.cangmaomao.lib.base.BaseView
 import okhttp3.RequestBody
 import okhttp3.Response
@@ -30,6 +31,8 @@ interface MainContract {
         fun carLocation(tag: String, map: Map<String, String>)
 
         fun carInfo(info: ArrayList<FleetInfo>, carLocation: CarLocation)
+
+        fun installApk(path: String, context: Context)
     }
 
 }
